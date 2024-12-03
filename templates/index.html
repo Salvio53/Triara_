@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión Interactiva</title>
+    <link rel="stylesheet" href="/static/css/styles.css"> <!-- Referencia al archivo CSS -->
+</head>
+<body>
+    <div class="container">
+        <h1>Gestión Interactiva</h1>
+        <label for="hoja">Selecciona una hoja:</label>
+        <select id="hoja">
+            <option value="Mainframe">Mainframe</option>
+            <option value="Contactos Autorizados">Contactos Autorizados</option>
+            <option value="Registro de KM">Registro de KM</option>
+            <option value="BDRIVE">BDRIVE</option>
+        </select>
+        <br><br>
+        <label for="palabra_clave">Palabra clave:</label>
+        <input type="text" id="palabra_clave">
+        <br><br>
+        <button onclick="realizarBusqueda()">Buscar</button>
+        <table id="resultados">
+            <thead>
+                <tr id="headers"></tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <script>
+        async function realizarBusqueda() {
+            const hoja = document.getElementById("hoja").value;
+            const palabra_clave = document.getElementById("palabra_clave").value;
+
+            const response = await fetch('/buscar', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ hoja, palabra_clave })
+            });
+
+            const data = await response.json();
+
+            const resultadosTabla = document.getElementById("resultados");
+            const headers = document.getElementById("headers");
+            resultadosTabla.tBodies[0].innerHTML = ""; // Limpia los resultados anteriores
+            headers.innerHTML = ""; // Limpia los encabezados
+
+            if (data.resultados) {
+                const resultados = data.resultados;
+
+                // Agregar encabezados
+                if (resultados.length > 0) {
+                    const keys = Object.keys(resultados[0]);
+                    keys.forEach(key => {
+                        const th = document.createElement("th");
+                        th.textContent = key;
+                        headers.appendChild(th);
+                    });
+                }
+
+                // Agregar filas
+                resultados.forEach(resultado => {
+                    const row = document.createElement("tr");
+                    for (let key in resultado) {
+                        const cell = document.createElement("td");
+                        cell.textContent = resultado[key];
+                        row.appendChild(cell);
+                    }
+                    resultadosTabla.tBodies[0].appendChild(row);
+                });
+            } else {
+                alert(data.error || "No se encontraron resultados.");
+            }
+        }
+    </script>
+</body>
+</html>
